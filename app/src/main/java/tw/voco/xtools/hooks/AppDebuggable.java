@@ -19,6 +19,11 @@ public class AppDebuggable extends XC_MethodHook {
                     new XC_MethodHook() {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+
+                            if (param.args[0] == null) return;
+
+                            if (!(param.args[0] instanceof String)) return;
+
                             String packageName = (String) param.args[0];
 
                             // skip google services debuggable && system app
@@ -27,11 +32,14 @@ public class AppDebuggable extends XC_MethodHook {
                             }
 
                             ApplicationInfo hookApplicationInfo = (ApplicationInfo) param.getResult();
-                            if (hookApplicationInfo != null && (hookApplicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
+                            if (hookApplicationInfo != null &&
+                                    (hookApplicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0 &&
+                                    (hookApplicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) == 0
+                            ) {
                                 // Make the app debuggable
                                 hookApplicationInfo.flags |= ApplicationInfo.FLAG_DEBUGGABLE;
 
-                                XposedBridge.log(String.format("%s|%s Debugging Enabled.", TAG, packageName));
+                                XposedBridge.log(String.format("%s %s Debugging Enabled.", TAG, packageName));
                             }
                         }
                     }
